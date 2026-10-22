@@ -1,0 +1,132 @@
+{
+  "gate_tests": [
+    "test_outputs.py::test_absent_top_level_key_is_refused",
+    "test_outputs.py::test_extra_top_level_key_is_refused",
+    "test_outputs.py::test_duplicate_json_key_is_refused",
+    "test_outputs.py::test_asset_id_shape_is_strict[]",
+    "test_outputs.py::test_asset_id_shape_is_strict[ leading]",
+    "test_outputs.py::test_asset_id_shape_is_strict[trailing ]",
+    "test_outputs.py::test_asset_id_shape_is_strict[line\\nbreak]",
+    "test_outputs.py::test_asset_id_shape_is_strict[XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX]",
+    "test_outputs.py::test_eight_probe_values_are_accepted",
+    "test_outputs.py::test_seven_probe_values_are_refused"
+  ],
+  "schema_version": 1,
+  "tests": {
+    "test_outputs.py::test_absent_parent_directory_is_refused": {
+      "priority": "boundary",
+      "rationale": "缺失父目录时不创建检查点；这验证公开边界和拒收口径，失败会产生越界输入或错误放行。",
+      "weight": 0.031
+    },
+    "test_outputs.py::test_boolean_is_not_a_number": {
+      "priority": "boundary",
+      "rationale": "布尔步长不被当成数字；这验证公开边界和拒收口径，失败会产生越界输入或错误放行。",
+      "weight": 0.031
+    },
+    "test_outputs.py::test_checkpoint_digest_mismatch_is_refused": {
+      "priority": "boundary",
+      "rationale": "模型输入改变后旧检查点失效；这验证公开边界和拒收口径，失败会产生越界输入或错误放行。",
+      "weight": 0.031
+    },
+    "test_outputs.py::test_checkpoint_is_lowercase_sha256": {
+      "priority": "supporting",
+      "rationale": "模型摘要排除一次运行的分块大小；这补充验证外围业务约束，失败会降低交付完整性和可运维性。",
+      "weight": 0.018
+    },
+    "test_outputs.py::test_chunk_lower_bound_is_one": {
+      "priority": "supporting",
+      "rationale": "分块下界 1 可运行并暂停；这补充验证外围业务约束，失败会降低交付完整性和可运维性。",
+      "weight": 0.018
+    },
+    "test_outputs.py::test_chunk_upper_bound_is_refused": {
+      "priority": "boundary",
+      "rationale": "分块上界越界被拒收；这验证公开边界和拒收口径，失败会产生越界输入或错误放行。",
+      "weight": 0.031
+    },
+    "test_outputs.py::test_chunked_resume_matches_one_shot_bytes": {
+      "priority": "core",
+      "rationale": "分块续算输出与一次运行完全一致；这是任务的主交付路径，失败意味着核心业务结果不可用。",
+      "weight": 0.1
+    },
+    "test_outputs.py::test_completed_checkpoint_rerun_keeps_both_files": {
+      "priority": "supporting",
+      "rationale": "完成后的幂等重跑不改两份文件；这补充验证外围业务约束，失败会降低交付完整性和可运维性。",
+      "weight": 0.018
+    },
+    "test_outputs.py::test_duplicate_targets_are_refused": {
+      "priority": "boundary",
+      "rationale": "两个目标路径相同是 IO 错误；这验证公开边界和拒收口径，失败会产生越界输入或错误放行。",
+      "weight": 0.031
+    },
+    "test_outputs.py::test_each_prediction_has_exact_keys": {
+      "priority": "schema",
+      "rationale": "每个预测项使用精确键集合；这验证结构、类型或序列化外观，失败会使下游无法稳定消费结果。",
+      "weight": 0.024
+    },
+    "test_outputs.py::test_each_prediction_is_finite": {
+      "priority": "supporting",
+      "rationale": "预测时间与数值都是有限数；这补充验证外围业务约束，失败会降低交付完整性和可运维性。",
+      "weight": 0.018
+    },
+    "test_outputs.py::test_paused_prefix_is_stable": {
+      "priority": "core",
+      "rationale": "暂停结果保留已确认的预测前缀；这是任务的主交付路径，失败意味着核心业务结果不可用。",
+      "weight": 0.1
+    },
+    "test_outputs.py::test_prediction_times_must_be_strictly_increasing": {
+      "priority": "supporting",
+      "rationale": "重复预测时刻被拒收；这补充验证外围业务约束，失败会降低交付完整性和可运维性。",
+      "weight": 0.018
+    },
+    "test_outputs.py::test_predictions_follow_the_recovered_model": {
+      "priority": "core",
+      "rationale": "预测值和请求时刻逐一对应且使用恢复模型；这是任务的主交付路径，失败意味着核心业务结果不可用。",
+      "weight": 0.1
+    },
+    "test_outputs.py::test_refusal_preserves_existing_output_bytes": {
+      "priority": "recovery",
+      "rationale": "输入拒收不破坏既有成功产物；这验证失败、重跑或恢复不变量，失败会造成旧数据和台账不一致。",
+      "weight": 0.042
+    },
+    "test_outputs.py::test_result_is_compact_ordered_and_newline_terminated": {
+      "priority": "schema",
+      "rationale": "结果使用固定键序、紧凑字节和单尾换行；这验证结构、类型或序列化外观，失败会使下游无法稳定消费结果。",
+      "weight": 0.024
+    },
+    "test_outputs.py::test_single_exponential_measurements_fail_the_model_check": {
+      "priority": "core",
+      "rationale": "单指数采样不冒充双模态模型；这是任务的主交付路径，失败意味着核心业务结果不可用。",
+      "weight": 0.1
+    },
+    "test_outputs.py::test_success_is_quiet": {
+      "priority": "supporting",
+      "rationale": "成功路径保持两个输出流为空；这补充验证外围业务约束，失败会降低交付完整性和可运维性。",
+      "weight": 0.017
+    },
+    "test_outputs.py::test_too_many_position_arguments_are_refused": {
+      "priority": "boundary",
+      "rationale": "多给位置参数时仍按用法拒收；这验证公开边界和拒收口径，失败会产生越界输入或错误放行。",
+      "weight": 0.031
+    },
+    "test_outputs.py::test_two_modes_are_recovered_to_tight_precision": {
+      "priority": "core",
+      "rationale": "从等间隔探针恢复两个仅由数据决定的指数模态；这是任务的主交付路径，失败意味着核心业务结果不可用。",
+      "weight": 0.1
+    },
+    "test_outputs.py::test_two_modes_matter_for_late_prediction": {
+      "priority": "core",
+      "rationale": "双模态响应与单指数近似在晚期预测上有可观察差异；这是任务的主交付路径，失败意味着核心业务结果不可用。",
+      "weight": 0.1
+    },
+    "test_outputs.py::test_usage_has_exact_prefix_and_status": {
+      "priority": "supporting",
+      "rationale": "参数个数错误时给出固定用法拒绝；这补充验证外围业务约束，失败会降低交付完整性和可运维性。",
+      "weight": 0.017
+    }
+  },
+  "weight_policy": {
+    "basis": "business_priority",
+    "core_min_share": 0.5,
+    "version": 1
+  }
+}
