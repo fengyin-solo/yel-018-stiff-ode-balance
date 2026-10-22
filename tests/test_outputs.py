@@ -93,7 +93,7 @@ def run_to_completion(tmp_path, document, stem="complete"):
 
 
 def test_usage_has_exact_prefix_and_status():
-    """题面：「参数数目不对时，标准输出应空，标准错误恰好是 `运行拒收: USAGE`，返回码为 2。」"""
+    """题面：「若位置参数数量不符，进程返回 2，标准输出为空，错误流仅为 `运行拒收: USAGE`。」"""
     result = subprocess.run([sys.executable, ENTRY, "only-one"], capture_output=True, text=True, timeout=30)
     assert result.returncode == 2
     assert result.stderr.startswith("运行拒收: USAGE")
@@ -155,7 +155,7 @@ def test_duplicate_json_key_is_refused(tmp_path):
     ["", " leading", "trailing ", "line\nbreak", "X" * 65],
 )
 def test_asset_id_shape_is_strict(tmp_path, asset_id):
-    """题面：「`asset_id` 是不超过 64 个字符的标签，首尾不能留空白，也不能夹控制字符。」"""
+    """题面：「`asset_id` 是长度至多 64 的标签；空白不能出现在两端，控制字符一律不接受。」"""
     document = response_record()
     document["asset_id"] = asset_id
     result, _, output, _ = invoke(tmp_path, document)
@@ -168,6 +168,14 @@ def test_eight_probe_values_are_accepted(tmp_path):
     document["probe_values"] = document["probe_values"][:8]
     result, _, output, _ = invoke(tmp_path, document)
     assert result.returncode == 0 and read_result(output)["status"] == "complete"
+
+
+def test_probe_step_upper_bound_is_accepted(tmp_path):
+    """题面：「`probe_step_s` 是探针相邻两次采样的秒数，大于 0 且不超过 10。」"""
+    document = response_record()
+    document["probe_step_s"] = 10.0
+    result, _, output, _ = invoke(tmp_path, document)
+    assert result.returncode == 0 and output.is_file()
 
 
 def test_seven_probe_values_are_refused(tmp_path):
@@ -222,7 +230,7 @@ def test_two_modes_are_recovered_to_tight_precision(tmp_path):
 
 
 def test_predictions_follow_the_recovered_model(tmp_path):
-    """题面：「`predictions` 按请求时刻顺序排列」。"""
+    """题面：「`predictions` 按请求到的先后列出，每一项只有 `t_s` 与 `value` 两个键，值均为有限数字。」"""
     result, _, output, _ = invoke(tmp_path, response_record())
     document = read_result(output)
     errors = [
@@ -234,7 +242,7 @@ def test_predictions_follow_the_recovered_model(tmp_path):
 
 
 def test_each_prediction_has_exact_keys(tmp_path):
-    """题面：「每项恰好两个键 `t_s`、`value`，都写有限数字。」"""
+    """题面：「文件仅以 LF 结尾。`status` 在本次调用算完全部预测时写 `complete`，否则写 `paused`。两个速率都取正数，慢速率小于快速率；两个幅值也是正数。相对拟合误差用全部探针中的最大绝对残差除以 `max(1, 最大探针读数)`。`predictions` 按请求到的先后列出，每一项只有 `t_s` 与 `value` 两个键，值均为有限数字。程序成功运行时 stdout 和 stderr 都不写内容。」"""
     result, _, output, _ = invoke(tmp_path, response_record())
     document = read_result(output)
     assert result.returncode == 0
@@ -242,7 +250,7 @@ def test_each_prediction_has_exact_keys(tmp_path):
 
 
 def test_each_prediction_is_finite(tmp_path):
-    """题面：「每项恰好两个键 `t_s`、`value`，都写有限数字。」"""
+    """题面：「文件仅以 LF 结尾。`status` 在本次调用算完全部预测时写 `complete`，否则写 `paused`。两个速率都取正数，慢速率小于快速率；两个幅值也是正数。相对拟合误差用全部探针中的最大绝对残差除以 `max(1, 最大探针读数)`。`predictions` 按请求到的先后列出，每一项只有 `t_s` 与 `value` 两个键，值均为有限数字。程序成功运行时 stdout 和 stderr 都不写内容。」"""
     result, _, output, _ = invoke(tmp_path, response_record())
     document = read_result(output)
     assert result.returncode == 0

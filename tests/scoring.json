@@ -116,7 +116,12 @@
     "test_outputs.py::test_two_modes_matter_for_late_prediction": {
       "priority": "core",
       "rationale": "双模态响应与单指数近似在晚期预测上有可观察差异；这是任务的主交付路径，失败意味着核心业务结果不可用。",
-      "weight": 0.1
+      "weight": 0.08
+    },
+    "test_outputs.py::test_probe_step_upper_bound_is_accepted": {
+      "priority": "boundary",
+      "rationale": "探针步长上界必须接受；这验证题面允许的 10 秒边界，失败会误拒合法记录。",
+      "weight": 0.02
     },
     "test_outputs.py::test_usage_has_exact_prefix_and_status": {
       "priority": "supporting",
