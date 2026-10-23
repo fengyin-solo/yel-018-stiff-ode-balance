@@ -163,11 +163,24 @@ def test_asset_id_shape_is_strict(tmp_path, asset_id):
 
 
 def test_eight_probe_values_are_accepted(tmp_path):
-    """题面：「`probe_values` 给 8 到 32 个正数」。"""
+    """题面：「`probe_values` 给 8 到 24 个正数」。"""
     document = response_record()
     document["probe_values"] = document["probe_values"][:8]
     result, _, output, _ = invoke(tmp_path, document)
+    longest = response_record()
+    longest["probe_values"] = [
+        exact_value(index * longest["probe_step_s"])
+        for index in range(24)
+    ]
+    longest_result, _, longest_output, _ = invoke(
+        tmp_path,
+        longest,
+        output_name="longest-result.json",
+        checkpoint_name="longest-checkpoint.json",
+    )
     assert result.returncode == 0 and read_result(output)["status"] == "complete"
+    assert longest_result.returncode == 0
+    assert read_result(longest_output)["status"] == "complete"
 
 
 def test_probe_step_upper_bound_is_accepted(tmp_path):
@@ -179,11 +192,26 @@ def test_probe_step_upper_bound_is_accepted(tmp_path):
 
 
 def test_seven_probe_values_are_refused(tmp_path):
-    """题面：「`probe_values` 给 8 到 32 个正数」。"""
+    """题面：「`probe_values` 给 8 到 24 个正数」。"""
     document = response_record()
     document["probe_values"] = document["probe_values"][:7]
     result, _, output, _ = invoke(tmp_path, document)
-    assert result.returncode == 1 and result.stderr == "运行拒收: BAD_INPUT\n" and not output.exists()
+    too_many = response_record()
+    too_many["probe_values"] = [
+        exact_value(index * too_many["probe_step_s"])
+        for index in range(25)
+    ]
+    too_many_result, _, too_many_output, _ = invoke(
+        tmp_path,
+        too_many,
+        output_name="too-many-result.json",
+        checkpoint_name="too-many-checkpoint.json",
+    )
+    assert result.returncode == 1 and result.stderr == "运行拒收: BAD_INPUT\n"
+    assert not output.exists()
+    assert too_many_result.returncode == 1
+    assert too_many_result.stderr == "运行拒收: BAD_INPUT\n"
+    assert not too_many_output.exists()
 
 
 def test_boolean_is_not_a_number(tmp_path):
@@ -195,15 +223,26 @@ def test_boolean_is_not_a_number(tmp_path):
 
 
 def test_prediction_times_must_be_strictly_increasing(tmp_path):
-    """题面：「`prediction_times_s` 给 1 到 200 个不重复、严格递增的非负数」。"""
+    """题面：「`prediction_times_s` 给 1 到 120 个不重复、严格递增的非负数」。"""
     document = response_record()
     document["prediction_times_s"] = [0.0, 1.0, 1.0]
     result, _, output, _ = invoke(tmp_path, document)
-    assert result.returncode == 1 and result.stderr == "运行拒收: BAD_INPUT\n" and not output.exists()
+    longest = response_record()
+    longest["prediction_times_s"] = [float(index) for index in range(120)]
+    longest_result, _, longest_output, _ = invoke(
+        tmp_path,
+        longest,
+        output_name="longest-predictions.json",
+        checkpoint_name="longest-predictions-checkpoint.json",
+    )
+    assert result.returncode == 1 and result.stderr == "运行拒收: BAD_INPUT\n"
+    assert not output.exists()
+    assert longest_result.returncode == 0
+    assert read_result(longest_output)["status"] == "paused"
 
 
 def test_chunk_lower_bound_is_one(tmp_path):
-    """题面：「一次调用最多补算的预测点由 `checkpoint_chunk` 指定；含 1 和 200 在内，超出范围即整单退回，布尔值同样不接受。」"""
+    """题面：「一次调用最多补算的预测点由 `checkpoint_chunk` 指定；含 1 和 120 在内，超出范围即整单退回，布尔值同样不接受。」"""
     document = response_record()
     document["checkpoint_chunk"] = 1
     result, _, output, _ = invoke(tmp_path, document)
@@ -211,11 +250,22 @@ def test_chunk_lower_bound_is_one(tmp_path):
 
 
 def test_chunk_upper_bound_is_refused(tmp_path):
-    """题面：「一次调用最多补算的预测点由 `checkpoint_chunk` 指定；含 1 和 200 在内，超出范围即整单退回，布尔值同样不接受。」"""
+    """题面：「一次调用最多补算的预测点由 `checkpoint_chunk` 指定；含 1 和 120 在内，超出范围即整单退回，布尔值同样不接受。」"""
     document = response_record()
-    document["checkpoint_chunk"] = 201
+    document["checkpoint_chunk"] = 121
     result, _, output, _ = invoke(tmp_path, document)
-    assert result.returncode == 1 and result.stderr == "运行拒收: BAD_INPUT\n" and not output.exists()
+    upper = response_record()
+    upper["checkpoint_chunk"] = 120
+    upper_result, _, upper_output, _ = invoke(
+        tmp_path,
+        upper,
+        output_name="upper-result.json",
+        checkpoint_name="upper-checkpoint.json",
+    )
+    assert result.returncode == 1 and result.stderr == "运行拒收: BAD_INPUT\n"
+    assert not output.exists()
+    assert upper_result.returncode == 0
+    assert read_result(upper_output)["status"] == "complete"
 
 
 def test_two_modes_are_recovered_to_tight_precision(tmp_path):

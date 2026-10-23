@@ -73,19 +73,19 @@ def validate_input(document):
     if not finite_number(step) or not 0 < step <= 10:
         raise Refusal("BAD_INPUT")
     values = document["probe_values"]
-    if not isinstance(values, list) or not 8 <= len(values) <= 32:
+    if not isinstance(values, list) or not 8 <= len(values) <= 24:
         raise Refusal("BAD_INPUT")
     if any(not finite_number(value) or value <= 0 for value in values):
         raise Refusal("BAD_INPUT")
     times = document["prediction_times_s"]
-    if not isinstance(times, list) or not 1 <= len(times) <= 200:
+    if not isinstance(times, list) or not 1 <= len(times) <= 120:
         raise Refusal("BAD_INPUT")
     if any(not finite_number(value) or value < 0 or value > 3600 for value in times):
         raise Refusal("BAD_INPUT")
     if any(left >= right for left, right in zip(times, times[1:])):
         raise Refusal("BAD_INPUT")
     chunk = document["checkpoint_chunk"]
-    if isinstance(chunk, bool) or not isinstance(chunk, int) or not 1 <= chunk <= 200:
+    if isinstance(chunk, bool) or not isinstance(chunk, int) or not 1 <= chunk <= 120:
         raise Refusal("BAD_INPUT")
     tolerance = document["fit_tolerance"]
     if not finite_number(tolerance) or not 1e-9 <= tolerance <= 1e-2:
